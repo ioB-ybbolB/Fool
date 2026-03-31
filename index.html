@@ -64,7 +64,7 @@
 
   <div class="hackerText" id="hackerText"></div>
 
-  <script>
+<script>
     const status = document.getElementById('hackMessage');
     const hackerText = document.getElementById('hackerText');
     const progressBar = document.getElementById('progressBar');
@@ -134,7 +134,7 @@
     function animate() {
       for (const canvas of canvases) {
         const ctx = canvas.getContext('2d');
-        ctx.fillStyle = `hsl(\${Math.random() * 360}, 100%, 50%)`;
+        ctx.fillStyle = `hsl(${Math.random() * 360}, 100%, 50%)`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
       requestAnimationFrame(animate);
